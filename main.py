@@ -1,7 +1,9 @@
 import discord
 import os
+from threading import Thread
 from discord.ext import commands
 import asyncio
+from api.api import start_api 
 from config import TOKEN
 from config import APPLICATION_ID
 
@@ -18,12 +20,24 @@ async def on_ready():
 async def reload(ctx, extension):
     await bot.reload_extension(f"cogs.{extension}")
     await ctx.send(f"ReLoaded {extension} done.")
+@bot.command()
+async def shutdown(ctx):
+    await ctx.send("Shutting down the bot...")
+    await bot.close()
 
 # load all python files in cogs
 async def load_extensions():
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            await bot.load_extension(f"cogs.{filename[:-3]}")
+    for root, _, files in os.walk("./cogs"):
+        for file in files:
+            if file.endswith(".py"):
+                relative_path = os.path.relpath(os.path.join(root, file), "./cogs")
+                module_path = "cogs." + relative_path.replace(os.sep, ".")[:-3]
+                try:
+                    await bot.load_extension(module_path)
+                    print(f"[OK]: Loaded {module_path}")
+                except Exception as e:
+                    print(f"[FAIL]: Failed to load {module_path}: {e}")
+
 # load all app commands
 async def load_appcommands():
     try:
@@ -35,6 +49,8 @@ async def load_appcommands():
 
 async def main():
     async with bot:
+        api_thread = Thread(target=start_api, daemon=True)
+        api_thread.start()
         await load_extensions()
         await bot.start(TOKEN)
         
