@@ -40,9 +40,12 @@ class Tarot(commands.Cog):
                         rotated_image_bytes.seek(0)
                         image_bytes = rotated_image_bytes
 
+                description_url = f"http://127.0.0.1:8000/tarot/get_tarot/description/{card_name}{'%20(逆位)' if is_reversed else ''}"
+                card_description = requests.get(description_url).json()['description']
+                
                 embed = discord.Embed(
                     title=f"{card_name} {'(逆位)' if is_reversed else ''}",
-                    description="卡片描述請督處我晚上寫",
+                    description = card_description,
                     colour=0x2c1376,
                     timestamp=datetime.datetime.now(),
                 )

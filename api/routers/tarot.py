@@ -1,13 +1,18 @@
 from fastapi import APIRouter, HTTPException
 import requests
+import google.generativeai as genai
 from bs4 import BeautifulSoup
 import json
 import random
 from PIL import Image
+from config import GENAI_APIKEY
 
 router = APIRouter()
 with open("./api/routers/tarot.json", "r", encoding="utf-8") as file:
     tarot_data = json.load(file)
+
+genai.configure(api_key=GENAI_APIKEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 @router.get("/get_all_tarot")
 def get_all_tarot():
@@ -41,3 +46,18 @@ def random_tarot():
     card_list = list(tarot_data.values())
     random_card = random.choice(card_list)
     return random_card
+
+@router.get("/get_tarot/description/{card_name}")
+def get_description(card_name: str):
+    try:
+        response = model.generate_content(
+            f"請用繁體中文回答塔羅牌 {card_name} 所代表的意涵，就回答這樣就好，不要自己額外新增其他東西，大約 100 字"
+        )
+        description = response.text.strip() if hasattr(response, "text") else None
+        
+        if not description:
+            raise HTTPException(status_code=500, detail="AI 無法生成描述")
+        
+        return {"card_name": card_name, "description": description}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI 回應錯誤: {str(e)}")
