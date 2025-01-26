@@ -1,10 +1,11 @@
 from fastapi import FastAPI
-from api.routers import fishing, tarot
+from api.routers import fishing, tarot, ncku_course
 import uvicorn
 
 app = FastAPI()
 app.include_router(fishing.router, prefix="/fishing", tags=["Fishing"])
 app.include_router(tarot.router, prefix="/tarot", tags=["Tarot"])
+app.include_router(ncku_course.router, prefix="/ncku_course", tags=["NCKU_course"])
 
 @app.get("/")
 def read_root():

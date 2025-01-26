@@ -16,7 +16,8 @@ class Tarot(commands.Cog):
     async def tarot_card(self, interaction: discord.Interaction):
         url = "http://127.0.0.1:8000/tarot/random_tarot"
         response = requests.get(url)
-
+        await interaction.response.defer()
+        
         if response.status_code == 200:
             card = response.json()
             card_url = card['url'] 
@@ -52,11 +53,11 @@ class Tarot(commands.Cog):
                 embed.set_author(name="你抽了一張塔羅牌！")
                 embed.set_thumbnail(url=card_url) 
 
-                await interaction.response.send_message(embed=embed, file=discord.File(image_bytes, filename="tarot_card.png"))
+                await interaction.followup.send(embed=embed, file=discord.File(image_bytes, filename="tarot_card.png"))
             except Exception as e:
-                await interaction.response.send_message(f"[ERROR]: {str(e)}")
+                await interaction.followup.send(f"[ERROR]: {str(e)}")
         else:
-            await interaction.response.send_message("API 掛了，請稍後再試！")
+            await interaction.followup.send("API 掛了，請稍後再試！")
 
 async def setup(bot):
     await bot.add_cog(Tarot(bot=bot))
