@@ -29,10 +29,29 @@ class Embed:
 class NCKU_Course(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+    def get_all_college(self):
+        file_path = "./api/routers/college.json"
+        with open(file_path, "r", encoding="utf-8") as json_file:
+            college_list = json.load(json_file)
     @app_commands.command(name="course_query", description="查詢課程資訊")
-    async def course_query(self, interaction: discord.Interaction, course_name: str):
+    @app_commands.choices(
+        college = [
+            app_commands.Choice(name="規劃與設計學院", value="規劃與設計學院"),
+            app_commands.Choice(name="工學院", value="工學院"),
+            app_commands.Choice(name="社會科學院", value="社會科學院"),
+            app_commands.Choice(name="醫學院", value="醫學院"),
+            app_commands.Choice(name="管理學院", value="管理學院"),
+            app_commands.Choice(name="文學院", value="文學院"),
+            app_commands.Choice(name="理學院", value="理學院"),
+            app_commands.Choice(name="電機資訊學院", value="電機資訊學院"),
+            app_commands.Choice(name="生物科學與科技學院", value="生物科學與科技學院"),
+            app_commands.Choice(name="智慧半導體及永續製造學院", value="智慧半導體及永續製造學院"),
+            app_commands.Choice(name="敏求智慧運算學院", value="敏求智慧運算學院"),
+        ]
+    )
+    async def course_query(self, interaction: discord.Interaction, college: str, department: str, course_name: str):
         await interaction.response.defer()
-        url = f"http://127.0.0.1:8000/ncku_course/query/{course_name}"
+        url = f"http://127.0.0.1:8000/ncku_course/query/{college}/{department}/{course_name}"
         response = requests.get(url)   
         if response.status_code == 200:
             response = response.json()
@@ -49,6 +68,21 @@ class NCKU_Course(commands.Cog):
             await interaction.followup.send("找不到課程捏，有可能是我太笨了... QQ")
         else:
             await interaction.followup.send("api 掛ㄌ，需要修復...")
+    @course_query.autocomplete("department")
+    async def department_autocomplete(self, interaction: discord.Interaction, current: str):
+        selected_college = interaction.namespace.college
+        if not selected_college:
+            return []
+        file_path = "./api/routers/department.json"
+        with open(file_path, "r", encoding="utf-8") as json_file:
+            department_data  = json.load(json_file)
+        departments = department_data.get(selected_college, {})
+        filtered_departments = [
+            app_commands.Choice(name=department, value=department)
+            for department in departments.keys() if current.lower() in department.lower()
+        ]
+        return filtered_departments
+        
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(NCKU_Course(bot))
