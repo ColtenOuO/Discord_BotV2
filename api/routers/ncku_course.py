@@ -18,6 +18,10 @@ cookies = [
     {"name": "PHPSESSID", "value": PHPSESSID, "domain": "course.ncku.edu.tw", "path": "/"},
     {"name": "COURSE_WEB", "value": COURSE_WEB, "domain": "course.ncku.edu.tw", "path": "/"}
 ]
+cookies_dictformat = {
+    "PHPSESSID": PHPSESSID,
+    "COURSE_WEB": COURSE_WEB
+}
 class CourseData:
     def __init__(self, department: str, course_code: str, class_id: str, type: str, course_name: str, credit: str, instructor:str, note:str, time_slot: str):
         self.department = department
@@ -44,7 +48,7 @@ class CourseData:
         return data
 
 def fetch_table_data(url: str, headers: dict):
-    response = requests.get(url, headers=headers, cookies=cookies)
+    response = requests.get(url, headers=headers, cookies=cookies_dictformat)
     response.encoding = "utf-8"
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -139,7 +143,7 @@ class ParsingNCKU():
     def __init__(self, target_url: str):
         self.target_url = target_url
     def list_college(self):
-        response = requests.get(self.target_url, headers=headers, cookies=cookies)
+        response = requests.get(self.target_url, headers=headers, cookies=cookies_dictformat)
         response.encoding = "utf-8"
         soup = BeautifulSoup(response.text, "html.parser")
         college_select = soup.find("select", id="college")
