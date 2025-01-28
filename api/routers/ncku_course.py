@@ -9,9 +9,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from urllib.parse import urlparse, parse_qs
-from config import DRIVER_PATH
+from config import DRIVER_PATH, PHPSESSID, COURSE_WEB
 router = APIRouter()
-
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
+}
+cookies = [
+    {"name": "PHPSESSID", "value": PHPSESSID, "domain": "course.ncku.edu.tw", "path": "/"},
+    {"name": "COURSE_WEB", "value": COURSE_WEB, "domain": "course.ncku.edu.tw", "path": "/"}
+]
 class CourseData:
     def __init__(self, department: str, course_code: str, class_id: str, type: str, course_name: str, credit: str, instructor:str, note:str, time_slot: str):
         self.department = department
@@ -38,7 +44,7 @@ class CourseData:
         return data
 
 def fetch_table_data(url: str, headers: dict):
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, cookies=cookies)
     response.encoding = "utf-8"
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -53,25 +59,12 @@ def fetch_table_data(url: str, headers: dict):
         data.append(cell_values)
     return data
 
-@router.get("/get_all_csie_course")
-def get_all_csie_course():
-    url = "https://course.ncku.edu.tw/index.php?c=qry11215&i=W2kHbVtmCzQGflchADgNPQZuVilVaw8iAWgAPwI4BjMAMwo7Vm9UeQUzVTcJOAMhWz4JKlduAGEMa1cwA2sHfAc9UzlfZgo0B2UAP1NgAToGLwEvBGkONgNrXSkGYgtqViQJdAdaVWUGZQZ3XW1WJQA8CDxZYQYkDW4BcgATBD1bLwd1W2kLcwZsV2gAMw09BmRWMFVjDzoBYQBsAnkGcQA4CjBWblQoBXpVfwlxAyFbZgl7V28ANQxrVyEDJAdpBzBTZl8kCi0HPwB2U2sBNwZuAX4EMA5uAz1dZwZjC2hWMQkiBz5VeAYwBmRdbFZ0AFAIK1lgBnsNOQFvAGMENVs9B2xbMws0BjRXaAB5DX8GblY8VTgPIgE3ADMCcgZ2AF0KbVY7VCgFMlV1CTgDMVtnCSpXEwA3DHNXOAMsB3oHJ1M5X2cKNQcmAHdTcwE7BjUBZgRnDjsDKl1iBjwLP1ZvCWkHP1U7BjEGPF1sVmcAPQhgWWEGNw1gAWUAaQRtWzIHZVtpC2cGP1djADMNPAZvVmJVOA8zAWgAPwI4BjMAMwo2Vm9UdwV6VTwJMwM5W38Jb1d3ADsMM1c5A2EHPAcp"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
-    }
-    data = fetch_table_data(url, headers)
-    return json.dumps(data, ensure_ascii=False, indent=4)
-
-
 @router.get("/query/{college}/{department}/{course_name}")
 def query_by_name(college:str, department:str, course_name: str):
     file_path = "./api/routers/department.json"
     with open(file_path, "r", encoding="utf-8") as json_file:
         dep_data = json.load(json_file)
     url = dep_data[college][department]
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
-    }
     data = fetch_table_data(url, headers)
     target_course = course_name
 
@@ -98,6 +91,10 @@ class WebDriver:
             self.url = url
             self.driver.get(url)
             self.driver.implicitly_wait(10)
+            for cookie in cookies:
+                self.driver.add_cookie(cookie)
+            self.driver.refresh()
+            
 
     def wait_urlChange(self):
         WebDriverWait(self.driver, 10).until(
@@ -142,10 +139,7 @@ class ParsingNCKU():
     def __init__(self, target_url: str):
         self.target_url = target_url
     def list_college(self):
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
-        }
-        response = requests.get(self.target_url, headers=headers)
+        response = requests.get(self.target_url, headers=headers, cookies=cookies)
         response.encoding = "utf-8"
         soup = BeautifulSoup(response.text, "html.parser")
         college_select = soup.find("select", id="college")
@@ -213,6 +207,7 @@ def list_all_college():
 
 @router.get("/list/all_department")
 def list_all_department():
+    
     file_path = "./api/routers/college.json"
     with open(file_path, "r", encoding="utf-8") as json_file:
         college_list = json.load(json_file)
@@ -222,6 +217,19 @@ def list_all_department():
         parsing = ParsingNCKU(college_url)
         data = parsing.list_department(college)
         all_data[college] = data
+    
+    
     with open("./api/routers/department.json", "w", encoding="utf-8") as json_file:
         json.dump(all_data, json_file, ensure_ascii=False, indent=4)
     return "OK"
+
+@router.get("/get/url/general/{type_name}")
+def get_general_course_url(type_name: str):
+    url = "https://course.ncku.edu.tw/index.php?c=qry11215"
+    webdriver = WebDriver(DRIVER_PATH)
+    webdriver(url)
+    webdriver.click_Bybutton("通識類課程")
+    webdriver.click_Bybutton(type_name)
+    target = webdriver.driver.current_url
+    webdriver.driver_close()
+    return target
