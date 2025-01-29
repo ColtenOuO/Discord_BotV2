@@ -9,6 +9,7 @@ from config import APPLICATION_ID
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True 
 bot = commands.Bot(command_prefix = "%", intents = intents, application_id=APPLICATION_ID)
 
 @bot.event

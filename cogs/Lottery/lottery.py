@@ -14,7 +14,6 @@ class Lottery(commands.Cog):
         def generate_numbers(pattern, count):
             numbers = [random.choice(pattern) for _ in range(count)]
             return numbers, "||" + "||||".join(str(num) for num in numbers) + "||"
-
         game_1_numbers, game_1 = generate_numbers(range(0, 10), 20)
         game_2_numbers, game_2 = generate_numbers(range(0, 10), 20)
         game_3_numbers, game_3 = generate_numbers(range(0, 10), 20)
@@ -54,7 +53,7 @@ class Lottery(commands.Cog):
                 if "".join(map(str, game_4_numbers)) == "2025":
                     total_prize += 10_000_000
 
-                self.embed.add_field(name="💰 你的總獎金", value=f"**{total_prize:,} 元**", inline=False)
+                self.embed.add_field(name="💰 你的總獎金", value=f"**{total_prize} 元**", inline=False)
 
                 api_url = f"http://127.0.0.1:8000/db/update/add/{interaction.user.id}/{total_prize}"
                 try:
