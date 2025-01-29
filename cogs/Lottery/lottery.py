@@ -3,6 +3,7 @@ import random
 import requests
 from discord.ext import commands
 from discord import app_commands
+from api.routers.db import get_balance
 
 class Lottery(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -19,14 +20,15 @@ class Lottery(commands.Cog):
         game_3_numbers, game_3 = generate_numbers(range(0, 10), 20)
         game_4_numbers, game_4 = generate_numbers(range(0, 10), 4)
 
-        api_url = f"http://127.0.0.1:8000/db/update/add/{interaction.user.id}/{-350}"
-        requests.post(api_url)
-
-        class LotteryView(discord.ui.View):
-            def __init__(self, user: discord.User):
-                super().__init__()
-                self.user = user
-
+        if( get_balance(interaction.user.id) < 350 ):
+            await interaction.response.send_message("你現在錢不夠買呱呱樂，快點去工作")
+        else:
+            api_url = f"http://127.0.0.1:8000/db/update/add/{interaction.user.id}/{-350}"
+            requests.post(api_url)
+            class LotteryView(discord.ui.View):
+                def __init__(self, user: discord.User):
+                    super().__init__()
+                    self.user = user
             @discord.ui.button(label="對獎", style=discord.ButtonStyle.green)
             async def check_prize(self, interaction: discord.Interaction, button: discord.ui.Button):
                 if interaction.user != self.user:
@@ -47,15 +49,15 @@ class Lottery(commands.Cog):
                     child.disabled = True
                 await interaction.response.edit_message(embed=embed, view=self)
 
-        embed = discord.Embed(title="新年快樂，一起來玩呱呱樂", colour=0x96d35f)
-        embed.set_author(name="呱呱樂 (歡慶開幕版)")
-        embed.add_field(name="遊戲 1: 每一格呱到的數字即獲得對應金額", value=game_1, inline=False)
-        embed.add_field(name="遊戲 2: 呱到 1 個 7 可以獲得遊戲 1 對應數字的金額", value=game_2, inline=False)
-        embed.add_field(name="遊戲 3: 刮出 0、2、5 一個可獲得 10 元", value=game_3, inline=False)
-        embed.add_field(name="遊戲 4: 呱到 2025 這個數字即可獲得 1000 萬元", value=game_4, inline=False)
-        embed.set_thumbnail(url="https://i.imghippo.com/files/gblo9797Gl.png")
+            embed = discord.Embed(title="新年快樂，一起來玩呱呱樂", colour=0x96d35f)
+            embed.set_author(name="呱呱樂 (歡慶開幕版)")
+            embed.add_field(name="遊戲 1: 每一格呱到的數字即獲得對應金額", value=game_1, inline=False)
+            embed.add_field(name="遊戲 2: 呱到 1 個 7 可以獲得遊戲 1 對應數字的金額", value=game_2, inline=False)
+            embed.add_field(name="遊戲 3: 刮出 0、2、5 一個可獲得 10 元", value=game_3, inline=False)
+            embed.add_field(name="遊戲 4: 呱到 2025 這個數字即可獲得 1000 萬元", value=game_4, inline=False)
+            embed.set_thumbnail(url="https://i.imghippo.com/files/gblo9797Gl.png")
 
-        await interaction.response.send_message(embed=embed, view=LotteryView(interaction.user))
+            await interaction.response.send_message(embed=embed, view=LotteryView(interaction.user))
 
 async def setup(bot):
     await bot.add_cog(Lottery(bot=bot))
