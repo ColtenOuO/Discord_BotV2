@@ -12,7 +12,7 @@ class Fishing(commands.Cog):
         self.bot = bot
         with open("./cogs/Fishing/responses.json", "r", encoding="utf-8") as file:
             self.responses = json.load(file)
-    def fish_embed_generator(self, discord_mention:str, fish_name: str, fish_level: str, fish_description: str):
+    def fish_embed_generator(self, fish_name: str, fish_level: str, fish_description: str, price: int):
         
         embed = discord.Embed(title=f"{fish_name}",
                       description=f"{fish_description}",
@@ -21,7 +21,7 @@ class Fishing(commands.Cog):
                       )
         embed.set_author(name=f"你釣起了一隻魚！！")
         embed.add_field(name="等級",value=f"{fish_level}",inline=False)
-        embed.add_field(name="價格",value=f"{random.randint(0,100)} 元",inline=False)
+        embed.add_field(name="價格",value=f"{price} 元",inline=False)
         embed.set_thumbnail(url="https://i.imghippo.com/files/ntuW9239iso.webp")
         return embed
     
@@ -44,9 +44,10 @@ class Fishing(commands.Cog):
             fish_name = random_fish['name']
             fish_level = random_fish['level']
             fish_description = random_fish['description']
-            user_mention = interaction.user.mention
-            print([fish_name, fish_level, fish_description])
-            await interaction.response.send_message(embed=self.fish_embed_generator(user_mention, fish_name, fish_level, fish_description))
+            price = random.randint(0,100)
+            await interaction.response.send_message(embed=self.fish_embed_generator(fish_name, fish_level, fish_description, price))
+            url = f"http://127.0.0.1:8000/db/update/add/{interaction.user.id}/{price}"
+            response = requests.post(url)
         else:
             await interaction.response.send_message("api 掛ㄌ，需要修復...")
 

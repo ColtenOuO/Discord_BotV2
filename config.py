@@ -10,6 +10,8 @@ class Gemini:
 class NCKU_Web:
     phpsessid: str
     course_web: str
+class MongoDB:
+    db_url: str
 
 
 jsonConfig = open('./config.json')
@@ -18,6 +20,7 @@ jsonFile = json.loads(jsonFile)
 config = Config()
 gemini = Gemini()
 ncku = NCKU_Web()
+db = MongoDB()
 
 config.token = jsonFile["discord_config"]['bot_token']
 config.application_id = jsonFile["discord_config"]["application_id"]
@@ -26,6 +29,7 @@ config.admin = jsonFile["discord_config"]['admin']
 gemini.api_key = jsonFile["gemini"]["api_key"]
 ncku.course_web = jsonFile["ncku_cookie"]["PHPSESSID"]
 ncku.phpsessid = jsonFile["ncku_cookie"]["COURSE_WEB"]
+db.db_url = jsonFile["MongoDB"]["db_url"]
 
 ADMIN = config.admin
 TOKEN = config.token
@@ -34,3 +38,4 @@ GENAI_APIKEY = gemini.api_key
 DRIVER_PATH = config.driver_path
 PHPSESSID = ncku.phpsessid
 COURSE_WEB = ncku.course_web
+DB_URL = db.db_url
