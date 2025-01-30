@@ -1,41 +1,50 @@
-import json
-
-class Config:
-    token: str = ""
-    application_id: int = 0
+from pydantic import BaseModel
+import orjson
+class DiscordConfig(BaseModel):
+    bot_token: str
+    application_id: int
     driver_path: str
     admin: int
-class Gemini:
-    api_key: str = ""
-class NCKU_Web:
+
+class GeminiConfig(BaseModel):
+    api_key: str
+
+class NCKUCookieConfig(BaseModel):
     phpsessid: str
     course_web: str
-class MongoDB:
+
+class MongoDBConfig(BaseModel):
     db_url: str
 
+class Config(BaseModel):
+    discord_config: DiscordConfig
+    gemini: GeminiConfig
+    ncku_cookie: NCKUCookieConfig
+    mongodb: MongoDBConfig
 
-jsonConfig = open('./config.json')
-jsonFile = jsonConfig.read()
-jsonFile = json.loads(jsonFile)
-config = Config()
-gemini = Gemini()
-ncku = NCKU_Web()
-db = MongoDB()
+try:
+    with open("./config.json", "rb") as file:
+        config = Config(**orjson.loads(file.read()))
+except:
+    config = Config(
+        discord_config=DiscordConfig(bot_token="", application_id=0, driver_path="", admin=0),
+        gemini=GeminiConfig(api_key=""),
+        ncku_cookie=NCKUCookieConfig(phpsessid="", course_web=""),
+        mongodb=MongoDBConfig(db_url="")
+    )
+    with open("config.json", "wb") as file:
+        file.write(orjson.dumps(config.model_dump(), option=orjson.OPT_INDENT_2))
+    input("please edit config.json")
+    exit(0)
 
-config.token = jsonFile["discord_config"]['bot_token']
-config.application_id = jsonFile["discord_config"]["application_id"]
-config.driver_path = jsonFile["discord_config"]["driver_path"]
-config.admin = jsonFile["discord_config"]['admin']
-gemini.api_key = jsonFile["gemini"]["api_key"]
-ncku.course_web = jsonFile["ncku_cookie"]["PHPSESSID"]
-ncku.phpsessid = jsonFile["ncku_cookie"]["COURSE_WEB"]
-db.db_url = jsonFile["MongoDB"]["db_url"]
+TOKEN = config.discord_config.bot_token
+APPLICATION_ID = config.discord_config.application_id
+DRIVER_PATH = config.discord_config.driver_path
+ADMIN_ID = config.discord_config.admin
 
-ADMIN = config.admin
-TOKEN = config.token
-APPLICATION_ID = config.application_id
-GENAI_APIKEY = gemini.api_key
-DRIVER_PATH = config.driver_path
-PHPSESSID = ncku.phpsessid
-COURSE_WEB = ncku.course_web
-DB_URL = db.db_url
+GEMINI_API_KEY = config.gemini.api_key
+
+PHPSESSID = config.ncku_cookie.phpsessid
+COURSE_WEB = config.ncku_cookie.course_web
+
+MONGO_DB_URL = config.mongodb.db_url

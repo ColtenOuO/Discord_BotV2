@@ -5,13 +5,13 @@ from bs4 import BeautifulSoup
 import json
 import random
 from PIL import Image
-from config import GENAI_APIKEY
+from config import GEMINI_API_KEY
 
 router = APIRouter()
 with open("./api/routers/tarot.json", "r", encoding="utf-8") as file:
     tarot_data = json.load(file)
 
-genai.configure(api_key=GENAI_APIKEY)
+genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 @router.get("/get_all_tarot")

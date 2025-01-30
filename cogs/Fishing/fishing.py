@@ -110,7 +110,8 @@ class Fishing(commands.Cog):
             embed = self.fish_embed_generator(fish['name'], fish['level'], fish['description'], price)
 
             if education_embed:
-                await interaction.response.send_message(embed=education_embed, ephemeral=(self.education_count != 29) )
+                if self.education_count[user_id] == 29: await interaction.response.send_message(embed=education_embed, ephemeral=False)
+                else: await interaction.response.send_message(embed=education_embed, ephemeral=True)
             else:
                 await interaction.response.send_message(embed=embed, ephemeral=True)
                 requests.post(f"http://127.0.0.1:8000/db/update/add/{user_id}/{price}")

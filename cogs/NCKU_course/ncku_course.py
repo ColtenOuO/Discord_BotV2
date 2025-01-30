@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord import app_commands
 from discord.ui import View, Button
 from api.routers.ncku_course import ParsingNCKU
-from config import ADMIN
+from config import ADMIN_ID
 class Embed:
     def __init__(self, id:str, name: str, teacher: str, grade: str, people: str, place: str, remark: str):
         self.id = id
@@ -34,7 +34,7 @@ class NCKU_Course(commands.Cog):
     @app_commands.command(name="course_update", description="更新選課系統資料(此為限制指令)")
     async def course_update(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        if interaction.user.id != ADMIN:
+        if interaction.user.id != ADMIN_ID:
             await interaction.followup.send("你沒有權限使用這個指令！不然你會把我電腦炸了...", ephemeral=True)
         else:
             await interaction.followup.send("⏳ 正在更新：各大學院資料...")

@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 from pymongo import MongoClient
-from config import DB_URL
+from config import MONGO_DB_URL
 import json
 import random
 router = APIRouter()
-client = MongoClient(DB_URL)
+client = MongoClient(MONGO_DB_URL)
 db = client["Discord-Bot"]
 collection = db["bank"]
 
