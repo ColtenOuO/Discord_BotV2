@@ -122,6 +122,9 @@ class Fishing(commands.Cog):
     async def report(self, interaction: discord.Interaction, user: discord.Member):
         reporter_id = interaction.user.id
         reported_id = user.id
+        if user.id in self.jailed_users:
+            await interaction.response.send_message("這個人已經在監獄了！")
+            return
         now = datetime.datetime.now()
 
         if reported_id in self.fish_times and (now - self.fish_times[reported_id]).total_seconds() <= 300:
