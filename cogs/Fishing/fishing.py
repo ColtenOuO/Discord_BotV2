@@ -5,6 +5,7 @@ import datetime
 import random
 from discord.ext import commands
 from discord import app_commands
+from api.routers.fishing import random_fish
 
 class Fishing(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -102,21 +103,14 @@ class Fishing(commands.Cog):
         else:
             education_embed = None
             self.fish_times[user_id] = now
-            response = requests.get("http://127.0.0.1:8000/fishing/random_fish")
-
-        if response.status_code == 200:
-            fish = response.json()
-            price = random.randint(0, 100)
-            embed = self.fish_embed_generator(fish['name'], fish['level'], fish['description'], price)
-
-            if education_embed:
-                if self.education_count[user_id] == 29: await interaction.response.send_message(embed=education_embed, ephemeral=False)
-                else: await interaction.response.send_message(embed=education_embed, ephemeral=True)
-            else:
-                await interaction.response.send_message(embed=embed, ephemeral=True)
-                requests.post(f"http://127.0.0.1:8000/db/update/add/{user_id}/{price}")
+        price = random.randint(0, 100)
+        fish = await random_fish()
+        embed = self.fish_embed_generator(fish['name'], fish['level'], fish['description'], price)
+        if education_embed: #bug
+            await interaction.response.send_message(embed=education_embed, ephemeral=(self.education_count[user_id] != 29))
         else:
-            await interaction.response.send_message("api 掛ㄌ，需要修復...")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            requests.post(f"http://127.0.0.1:8000/db/update/add/{user_id}/{price}")
 
     @app_commands.command(name="report", description="檢舉一位使用者，如果他在 5 分鐘內釣過魚則檢舉成功")
     async def report(self, interaction: discord.Interaction, user: discord.Member):
